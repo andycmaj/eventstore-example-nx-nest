@@ -4,13 +4,6 @@ import { GithubService } from './githubService';
 import { EventStore } from '../eventStore/eventStore';
 import { jsonEvent } from '@eventstore/db-client';
 
-export class CreatePullRequestCommand {
-  constructor(
-    public readonly heroId: string,
-    public readonly dragonId: string,
-  ) {}
-}
-
 @Controller()
 export class GithubController {
   constructor(
