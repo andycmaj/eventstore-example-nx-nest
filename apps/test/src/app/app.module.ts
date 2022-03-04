@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { PullRequestsModule } from '../pullRequests/pullRequests.module';
-import { EventStoreModule } from '../eventStore/eventStore.module';
 
 export class Log {
   debug = console.log;
@@ -9,11 +8,6 @@ export class Log {
 }
 
 @Module({
-  imports: [
-    EventStoreModule.forRoot({
-      connectionString: 'esdb://localhost:2113?tls=false',
-    }),
-    PullRequestsModule,
-  ],
+  imports: [PullRequestsModule],
 })
 export class AppModule {}

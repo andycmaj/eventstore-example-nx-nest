@@ -14,7 +14,7 @@ export class EventStoreModule {
         },
         EventStore,
       ],
-      exports: [EventStore],
+      exports: [EventStore, EVENTSTORE_CONFIG],
     };
   }
 }
