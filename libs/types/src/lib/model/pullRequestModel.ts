@@ -11,7 +11,11 @@ export class PullRequestModel {
       // run machine against stream
       const machine = interpret(mergeRequestStateMachine).start();
       for await (const prEvent of eventStream) {
+        console.log('sending to state machine', prEvent.event);
         machine.send(prEvent.event);
+
+        console.log('context after send', machine.state.value);
+        console.log('state after send', machine.state.context);
       }
       machine.stop();
 

@@ -9,6 +9,7 @@ import {
 import {
   PullRequestEvent,
   PullRequestOpened,
+  PullRequestReviewRequested,
   PullRequestReviewSubmitted,
 } from '@testapp/events';
 import { CodeReviewOutcome, PullRequest } from '@testapp/types';
@@ -36,7 +37,6 @@ type StateEvent = PullRequestEvent;
 type States =
   | 'Init'
   | 'Open'
-  | 'PendingReview'
   | 'ReviewedPendingAuthorChanges'
   | 'ApprovedPendingMerge'
   | 'Resolved';
@@ -73,6 +73,20 @@ const updateCodeReviewsOnSubmitted: (
   },
 ];
 
+const assignRequestedReviewersOnOpenedOrRequested: (
+  context: StateMachineContext,
+  event: PullRequestOpened | PullRequestReviewRequested,
+) => StateMachineContext['reviewStates'] = (context, event) => {
+  console.log('     ===== in action', event);
+  return {
+    ...context.reviewStates,
+    ...(event.data.requestedUserName && {
+      [event.data.requestedUserName]: {
+        outcomeState: 'requested',
+      },
+    }),
+  };
+};
 const onPullRequestReviewSubmitted: TransitionsConfig<
   StateMachineContext,
   PullRequestEvent
@@ -131,23 +145,34 @@ export const mergeRequestStateMachine: StateMachine<
     states: {
       Init: {
         on: {
+          // order of these events is not guaranteed
+          // for github hooks
           PullRequestOpened: 'Open',
+          PullRequestReviewRequested: 'Open',
         },
       },
       Open: {
-        entry: assign((context, event: PullRequestOpened) => ({
-          title: event.data.title,
-          url: event.data.url,
-          authorUserName: event.data.authorUserName,
-          isResolved: false,
-          wasApproved: false,
-        })),
+        entry: [
+          assign(
+            (_, event: PullRequestOpened | PullRequestReviewRequested) => ({
+              title: event.data.title,
+              url: event.data.url,
+              authorUserName: event.data.authorUserName,
+              isResolved: false,
+              wasApproved: false,
+            }),
+          ),
+          assign({
+            reviewStates: assignRequestedReviewersOnOpenedOrRequested,
+          }),
+        ],
         on: {
-          ...onPullRequestReviewSubmitted,
-        },
-      },
-      PendingReview: {
-        on: {
+          // order of these events is not guaranteed for github hooks.
+          // in this case, we use an "external self-transition"...
+          // so that we re-run entry logic to backfill any missing fields
+          // see https://xstate.js.org/docs/guides/transitions.html#self-transitions
+          PullRequestOpened: 'Open',
+          PullRequestReviewRequested: 'Open',
           ...onPullRequestReviewSubmitted,
         },
       },
@@ -159,12 +184,7 @@ export const mergeRequestStateMachine: StateMachine<
       },
       ApprovedPendingMerge: {
         on: {
-          PullRequestClosed: {
-            target: 'Resolved',
-            actions: assign({
-              resolution: (_, event) => event.data.resolution,
-            }),
-          },
+          ...onPullRequestClosed,
           ...onPullRequestReviewSubmitted,
         },
       },

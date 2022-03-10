@@ -49,15 +49,17 @@ export class GithubController {
     }
 
     try {
-      const { streamName, event } = result;
-      await this.eventStore.client.appendToStream(streamName, event, {
+      const { streamName, events } = result;
+      await this.eventStore.client.appendToStream(streamName, events, {
         // if we expect this to be the first event in any PR stream
         // expectedRevision: NO_STREAM,
       });
 
       return {
         statusCode: 202,
-        body: JSON.stringify({ event: { id: event.id, data: event.data } }),
+        body: JSON.stringify({
+          events: events.map(({ id, data }) => ({ id, data })),
+        }),
       };
     } catch (e) {
       console.error(e);

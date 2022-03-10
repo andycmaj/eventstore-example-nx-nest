@@ -6,11 +6,12 @@ import { WebhookEventType } from './webhookEventTypes';
 import {
   PullRequestEvent,
   PullRequestOpened,
+  PullRequestReviewRequested,
   PullRequestReviewSubmitted,
 } from '@testapp/events';
 
 type CreateEventFromWebhookResult =
-  | { streamName: string; event: EventData<PullRequestEvent> }
+  | { streamName: string; events: EventData<PullRequestEvent>[] }
   | false;
 
 @Injectable()
@@ -46,26 +47,53 @@ export class GithubService {
   ): CreateEventFromWebhookResult {
     const { action } = webhookBody;
 
-    if (eventType === 'pull_request' && action === 'opened') {
+    if (
+      eventType === 'pull_request' &&
+      ['opened', 'review_requested'].includes(action)
+    ) {
       const {
         number,
         pull_request: { html_url, title },
         sender: { login: authorUserName },
       } = webhookBody;
 
-      return {
-        streamName: this.getPullRequestStreamName(html_url),
-        event: jsonEvent<PullRequestOpened>({
-          id: deliveryId,
-          type: 'PullRequestOpened',
-          data: {
-            authorUserName,
-            pullRequestId: number,
-            title,
-            url: html_url,
-          },
-        }),
-      };
+      if (action === 'opened') {
+        return {
+          streamName: this.getPullRequestStreamName(html_url),
+          events: [
+            jsonEvent<PullRequestOpened>({
+              id: deliveryId,
+              type: 'PullRequestOpened',
+              data: {
+                authorUserName,
+                pullRequestId: number,
+                title,
+                url: html_url,
+              },
+            }),
+          ],
+        };
+      } else {
+        const {
+          pull_request: { requested_reviewers },
+        } = webhookBody;
+        return {
+          streamName: this.getPullRequestStreamName(html_url),
+          events: requested_reviewers.map((reviewer) =>
+            jsonEvent<PullRequestReviewRequested>({
+              id: deliveryId,
+              type: 'PullRequestReviewRequested',
+              data: {
+                authorUserName,
+                pullRequestId: number,
+                title,
+                url: html_url,
+                requestedUserName: reviewer.login,
+              },
+            }),
+          ),
+        };
+      }
     } else if (eventType === 'pull_request_review' && action === 'submitted') {
       const {
         review: {
@@ -79,18 +107,20 @@ export class GithubService {
 
       return {
         streamName: this.getPullRequestStreamName(pr_url),
-        event: jsonEvent<PullRequestReviewSubmitted>({
-          id: deliveryId,
-          type: 'PullRequestReviewSubmitted',
-          data: {
-            reviewId: id,
-            reviewerUserName,
-            url: html_url,
-            pullRequestId: number,
-            pullRequestUrl: pr_url,
-            outcome: state,
-          },
-        }),
+        events: [
+          jsonEvent<PullRequestReviewSubmitted>({
+            id: deliveryId,
+            type: 'PullRequestReviewSubmitted',
+            data: {
+              reviewId: id,
+              reviewerUserName,
+              url: html_url,
+              pullRequestId: number,
+              pullRequestUrl: pr_url,
+              outcome: state,
+            },
+          }),
+        ],
       };
     } else {
       return false;

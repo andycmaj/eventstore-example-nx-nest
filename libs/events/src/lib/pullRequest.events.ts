@@ -7,13 +7,18 @@ interface PullRequestCommonFields extends Record<string, any> {
   url: string;
   authorUserName: string;
 }
+
+interface RequestedReviewersFields extends Record<string, any> {
+  requestedUserName: string;
+}
+
 export type PullRequestOpened = JSONEventType<
   'PullRequestOpened',
-  PullRequestCommonFields
+  PullRequestCommonFields & Partial<RequestedReviewersFields>
 >;
 
 export type PullRequestReviewRequested = JSONEventType<
-  'CodeReviewRequested',
+  'PullRequestReviewRequested',
   PullRequestCommonFields & {
     requestedUserName: string;
   }
