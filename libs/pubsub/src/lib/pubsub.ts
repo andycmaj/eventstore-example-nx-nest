@@ -1,7 +1,7 @@
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import * as Redis from 'ioredis';
 
-const options = {
+export const redisOptions = {
   host: 'localhost',
   port: 6380,
   retryStrategy: (times) => {
@@ -10,19 +10,9 @@ const options = {
   },
 };
 
-export const redis = new Redis(options);
-
-// const prReviver = (key, value) => {
-//   if (typeof value === 'string' && value.startsWith('https://github.com')) {
-//     const serialized = await redis.get(value);
-//     return JSON.parse(serialized);
-//   }
-
-//   return value;
-// };
+export const redis = new Redis(redisOptions);
 
 export const redisPubSub = new RedisPubSub({
-  publisher: new Redis(options),
-  subscriber: new Redis(options),
-  // reviver: prReviver,
+  publisher: new Redis(redisOptions),
+  subscriber: new Redis(redisOptions),
 });

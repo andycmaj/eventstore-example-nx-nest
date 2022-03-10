@@ -19,7 +19,7 @@ export class Log {
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile: join(process.cwd(), 'generated/schema.gql'),
       installSubscriptionHandlers: true,
       subscriptions: {
         'subscriptions-transport-ws': {

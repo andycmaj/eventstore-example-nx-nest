@@ -8,7 +8,7 @@ type CodeReview {
 }
 
 """pull request"""
-type PullRequestModel {
+type PullRequestType {
   title: String!
   authorUserName: String!
   url: String!
@@ -19,9 +19,9 @@ type PullRequestModel {
 }
 
 type Query {
-  getAllPullRequests: [PullRequestModel!]!
+  getAllPullRequests: [PullRequestType!]!
 }
 
 type Subscription {
-  pullRequestUpdated: PullRequestModel!
+  pullRequestUpdated: PullRequestType!
 }

@@ -1,6 +1,5 @@
-import { interpret } from 'xstate';
+import { PullRequestModel } from '@testapp/types';
 import { EventStoreDBClient } from '@eventstore/db-client';
-import { mergeRequestStateMachine } from './pullRequestWriteModel/stateMachine';
 import { PullRequestEvent } from '@testapp/events';
 import { redis, redisPubSub } from '@testapp/pubsub';
 
@@ -31,36 +30,15 @@ const run = async () => {
       },
     );
 
-    // run machine against stream
-    const machine = interpret(mergeRequestStateMachine).start();
-    for await (const prEvent of streamEvents) {
-      // console.log(
-      //   'STATE MACHINE EXECUTE',
-      //   prEvent.event.type,
-      //   prEvent.event.data,
-      //   '=========',
-      // );
-      machine.send(prEvent.event);
-    }
-    machine.stop();
+    const model = new PullRequestModel();
+    await model.project(streamEvents);
 
-    // console.log(
-    //   'CURRENT STATE AFTER EVENT',
-    //   JSON.stringify(
-    //     {
-    //       state: machine.state.value,
-    //       context: machine.state.context,
-    //     },
-    //     null,
-    //     2,
-    //   ),
-    // );
-
-    redis.set(machine.state.context.url, JSON.stringify(machine.state.context));
+    // Update the projected model
+    await redis.set(model.url, JSON.stringify(model.state));
 
     // SUMMARY TOPIC
-    redisPubSub.publish('PR_UPDATED', {
-      pullRequestUpdated: machine.state.context,
+    await redisPubSub.publish('PR_UPDATED', {
+      pullRequestUpdated: model.state,
     });
   }
 };

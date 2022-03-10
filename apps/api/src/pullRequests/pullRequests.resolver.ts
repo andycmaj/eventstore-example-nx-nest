@@ -1,65 +1,27 @@
-import {
-  Field,
-  ObjectType,
-  Query,
-  Resolver,
-  Subscription,
-} from '@nestjs/graphql';
-import {
-  CodeReviewOutcome,
-  PullRequest,
-  PullRequestResolution,
-} from '@testapp/types';
-import { redis, redisPubSub } from '@testapp/pubsub';
+import { Inject } from '@nestjs/common';
+import { Query, Resolver, Subscription } from '@nestjs/graphql';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { Redis } from 'ioredis';
+import { PullRequestType } from './pullRequests.types';
 
-@ObjectType()
-export class CodeReview {
-  @Field()
-  userName: string;
-
-  @Field(() => String)
-  outcome: CodeReviewOutcome;
-}
-
-@ObjectType({ description: 'pull request' })
-export class PullRequestModel implements PullRequest {
-  @Field()
-  title: string;
-
-  @Field()
-  authorUserName: string;
-
-  @Field()
-  url: string;
-
-  @Field()
-  isResolved: boolean;
-
-  @Field()
-  wasApproved: boolean;
-
-  @Field(() => String, { nullable: true })
-  resolution?: PullRequestResolution;
-
-  @Field(() => [CodeReview])
-  reviews: CodeReview[];
-}
-
-@Resolver(() => PullRequestModel)
+@Resolver(() => PullRequestType)
 export class PullRequestsResolver {
-  @Query(() => [PullRequestModel])
-  async getAllPullRequests(): Promise<PullRequestModel[]> {
-    const keys = await redis.keys('*');
-    console.log('keys', keys);
-    const values = await redis.mget(keys.filter((k) => k !== ''));
-    console.log('values', JSON.stringify(values, null, 2));
-    return values.map((v) => JSON.parse(v)) as any;
+  constructor(
+    private readonly pubSub: RedisPubSub,
+    @Inject('REDIS') private readonly modelCache: Redis,
+  ) {}
+
+  @Query(() => [PullRequestType])
+  async getAllPullRequests(): Promise<PullRequestType[]> {
+    const keys = await this.modelCache.keys('*');
+    const values = await this.modelCache.mget(keys.filter((k) => k !== ''));
+    return values.map((v) => JSON.parse(v)) as PullRequestType[];
   }
 
-  @Subscription(() => PullRequestModel, {
+  @Subscription(() => PullRequestType, {
     name: 'pullRequestUpdated',
   })
   pullRequestUpdated() {
-    return redisPubSub.asyncIterator('PR_UPDATED');
+    return this.pubSub.asyncIterator('PR_UPDATED');
   }
 }
