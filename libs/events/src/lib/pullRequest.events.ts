@@ -12,6 +12,13 @@ export type PullRequestOpened = JSONEventType<
   PullRequestCommonFields
 >;
 
+export type PullRequestReviewRequested = JSONEventType<
+  'CodeReviewRequested',
+  PullRequestCommonFields & {
+    requestedUserName: string;
+  }
+>;
+
 export type PullRequestReviewSubmitted = JSONEventType<
   'PullRequestReviewSubmitted',
   {
@@ -33,5 +40,6 @@ export type PullRequestClosed = JSONEventType<
 
 export type PullRequestEvent =
   | PullRequestOpened
+  | PullRequestReviewRequested
   | PullRequestReviewSubmitted
   | PullRequestClosed;

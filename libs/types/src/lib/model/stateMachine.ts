@@ -4,6 +4,7 @@ import {
   Machine,
   StateMachine,
   StateNodeConfig,
+  TransitionsConfig,
 } from 'xstate';
 import {
   PullRequestEvent,
@@ -35,6 +36,7 @@ type StateEvent = PullRequestEvent;
 type States =
   | 'Init'
   | 'Open'
+  | 'PendingReview'
   | 'ReviewedPendingAuthorChanges'
   | 'ApprovedPendingMerge'
   | 'Resolved';
@@ -71,6 +73,43 @@ const updateCodeReviewsOnSubmitted: (
   },
 ];
 
+const onPullRequestReviewSubmitted: TransitionsConfig<
+  StateMachineContext,
+  PullRequestEvent
+> = {
+  PullRequestReviewSubmitted: [
+    {
+      target: 'ApprovedPendingMerge',
+      cond: 'noOutstandingRejections',
+      actions: assign({
+        wasApproved: (_, __) => true,
+        reviewStates: updateCodeReviewStatesOnSubmitted,
+        reviews: updateCodeReviewsOnSubmitted,
+      }),
+    },
+    {
+      target: 'ReviewedPendingAuthorChanges',
+      cond: 'anyOutstandingRejections',
+      actions: assign({
+        reviewStates: updateCodeReviewStatesOnSubmitted,
+        reviews: updateCodeReviewsOnSubmitted,
+      }),
+    },
+  ],
+};
+
+const onPullRequestClosed: TransitionsConfig<
+  StateMachineContext,
+  PullRequestEvent
+> = {
+  PullRequestClosed: {
+    target: 'Resolved',
+    actions: assign({
+      resolution: (_, event) => event.data.resolution,
+    }),
+  },
+};
+
 export const mergeRequestStateMachine: StateMachine<
   StateMachineContext,
   StateSchema,
@@ -104,55 +143,18 @@ export const mergeRequestStateMachine: StateMachine<
           wasApproved: false,
         })),
         on: {
-          PullRequestReviewSubmitted: [
-            {
-              target: 'ApprovedPendingMerge',
-              cond: 'noOutstandingRejections',
-              actions: assign({
-                wasApproved: (_, __) => true,
-                reviewStates: updateCodeReviewStatesOnSubmitted,
-                reviews: updateCodeReviewsOnSubmitted,
-              }),
-            },
-            {
-              target: 'ReviewedPendingAuthorChanges',
-              cond: 'anyOutstandingRejections',
-              actions: assign({
-                reviewStates: updateCodeReviewStatesOnSubmitted,
-                reviews: updateCodeReviewsOnSubmitted,
-              }),
-            },
-          ],
+          ...onPullRequestReviewSubmitted,
+        },
+      },
+      PendingReview: {
+        on: {
+          ...onPullRequestReviewSubmitted,
         },
       },
       ReviewedPendingAuthorChanges: {
         on: {
-          PullRequestClosed: {
-            target: 'Resolved',
-            actions: assign({
-              resolution: (_, event) => event.data.resolution,
-            }),
-          },
-          PullRequestReviewSubmitted: [
-            {
-              target: 'ApprovedPendingMerge',
-              cond: 'noOutstandingRejections',
-              actions: assign({
-                wasApproved: (_, __) => true,
-                reviewStates: updateCodeReviewStatesOnSubmitted,
-                reviews: updateCodeReviewsOnSubmitted,
-              }),
-            },
-            {
-              target: 'ReviewedPendingAuthorChanges',
-              cond: 'anyOutstandingRejections',
-              actions: assign({
-                wasApproved: (_, __) => false,
-                reviewStates: updateCodeReviewStatesOnSubmitted,
-                reviews: updateCodeReviewsOnSubmitted,
-              }),
-            },
-          ],
+          ...onPullRequestClosed,
+          ...onPullRequestReviewSubmitted,
         },
       },
       ApprovedPendingMerge: {
@@ -163,26 +165,7 @@ export const mergeRequestStateMachine: StateMachine<
               resolution: (_, event) => event.data.resolution,
             }),
           },
-          PullRequestReviewSubmitted: [
-            {
-              target: 'ApprovedPendingMerge',
-              cond: 'noOutstandingRejections',
-              actions: assign({
-                wasApproved: (_, __) => true,
-                reviewStates: updateCodeReviewStatesOnSubmitted,
-                reviews: updateCodeReviewsOnSubmitted,
-              }),
-            },
-            {
-              target: 'ReviewedPendingAuthorChanges',
-              cond: 'anyOutstandingRejections',
-              actions: assign({
-                wasApproved: (_, __) => false,
-                reviewStates: updateCodeReviewStatesOnSubmitted,
-                reviews: updateCodeReviewsOnSubmitted,
-              }),
-            },
-          ],
+          ...onPullRequestReviewSubmitted,
         },
       },
       Resolved: {

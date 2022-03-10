@@ -1,5 +1,11 @@
 import styled from '@emotion/styled';
-import NxWelcome from './nx-welcome';
+import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client';
+import { PullRequests } from './PullRequests';
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  uri: 'http://localhost:3333/graphql',
+});
 
 const StyledApp = styled.div`
   // Your style here
@@ -7,9 +13,11 @@ const StyledApp = styled.div`
 
 export function App() {
   return (
-    <StyledApp>
-      <NxWelcome title="ui" />
-    </StyledApp>
+    <ApolloProvider client={client}>
+      <StyledApp>
+        <PullRequests />
+      </StyledApp>
+    </ApolloProvider>
   );
 }
 
