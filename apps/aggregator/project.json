@@ -1,0 +1,46 @@
+{
+  "root": "apps/aggregator",
+  "sourceRoot": "apps/aggregator/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/node:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/aggregator",
+        "main": "apps/aggregator/src/main.ts",
+        "tsConfig": "apps/aggregator/tsconfig.app.json"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/node:execute",
+      "options": {
+        "buildTarget": "aggregator:build",
+        "port": 9230
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/aggregator/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/aggregator"],
+      "options": {
+        "jestConfig": "apps/aggregator/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

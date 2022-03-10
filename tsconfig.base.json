@@ -14,7 +14,11 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@testapp/events": ["libs/events/src/index.ts"],
+      "@testapp/pubsub": ["libs/pubsub/src/index.ts"],
+      "@testapp/types": ["libs/types/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

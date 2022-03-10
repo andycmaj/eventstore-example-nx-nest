@@ -1,6 +1,11 @@
 {
   "version": 2,
   "projects": {
-    "test": "apps/test"
+    "aggregator": "apps/aggregator",
+    "api": "apps/api",
+    "events": "libs/events",
+    "pubsub": "libs/pubsub",
+    "types": "libs/types",
+    "ui": "apps/ui"
   }
 }

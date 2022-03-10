@@ -1,0 +1,57 @@
+import { PullRequestEvent } from '@testapp/events';
+import { createMachine } from 'xstate';
+import { StateMachineContext } from './stateMachine';
+
+// The events that the machine handles
+type StateEvent = PullRequestEvent;
+
+export type PullRequestState =
+  | {
+      value: 'Open';
+      context: StateMachineContext & {
+        resolution: undefined;
+      };
+    }
+  | {
+      // just opened, and reviewers requested
+      value: 'OpenPendingReview';
+      context: StateMachineContext & {
+        resolution: undefined;
+      };
+    }
+  | {
+      // reviewed with Changes Requested outcome. author needs to make changes
+      value: 'ReviewedPendingAuthorChanges';
+      context: StateMachineContext & {
+        resolution: undefined;
+      };
+    }
+  | {
+      // reviewed with Approved outcome. author or someone else needs to merge
+      value: 'ApprovedPendingMerge';
+      context: StateMachineContext & {
+        resolution: undefined;
+      };
+    }
+  | {
+      // Merged or closed
+      value: 'Resolved';
+      context: StateMachineContext;
+    };
+
+export const machineWithTypeStates = createMachine<
+  StateMachineContext,
+  StateEvent,
+  PullRequestState
+>({
+  id: 'MergeRequestState',
+  initial: 'Oxxxxpen',
+  context: {
+    codeReviewStates: {},
+  },
+  states: {
+    Open: {},
+    Closed: {},
+    RandomInvalidStateShouldTriggerTSError: {},
+  },
+});

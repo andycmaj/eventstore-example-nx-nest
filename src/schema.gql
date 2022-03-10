@@ -1,0 +1,27 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type CodeReview {
+  userName: String!
+  outcome: String!
+}
+
+"""pull request"""
+type PullRequestModel {
+  title: String!
+  authorUserName: String!
+  url: String!
+  isResolved: Boolean!
+  wasApproved: Boolean!
+  resolution: String
+  reviews: [CodeReview!]!
+}
+
+type Query {
+  getAllPullRequests: [PullRequestModel!]!
+}
+
+type Subscription {
+  pullRequestUpdated: PullRequestModel!
+}

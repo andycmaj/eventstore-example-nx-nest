@@ -2,9 +2,17 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Node App",
+      "name": "Debug API",
       "type": "node",
       "request": "attach"
+      // default port
+      // "port": 9229
+    },
+    {
+      "name": "Debug Aggregator",
+      "type": "node",
+      "request": "attach",
+      "port": 9230
     }
   ]
 }

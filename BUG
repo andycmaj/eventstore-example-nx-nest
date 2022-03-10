@@ -1,8 +1,0 @@
-Error: Nest can't resolve dependencies of the GithubController (GithubService, ?). Please make sure that the argument EventStore at index [1] is available in the PullRequestsModule context.
-
-Potential solutions:
-- If EventStore is a provider, is it part of the current PullRequestsModule?
-- If EventStore is exported from a separate @Module, is that module imported within PullRequestsModule?
-  @Module({
-    imports: [ /* the Module containing EventStore */ ]
-  })

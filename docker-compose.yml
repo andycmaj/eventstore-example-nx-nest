@@ -1,7 +1,7 @@
 version: '3.4'
 
 services:
-  eventstore.db:
+  event_store:
     image: eventstore/eventstore:21.10.0-buster-slim
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
@@ -22,6 +22,12 @@ services:
       - type: volume
         source: eventstore-volume-logs
         target: /var/log/eventstore
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - '6380:6379'
 
 volumes:
   eventstore-volume-data:
