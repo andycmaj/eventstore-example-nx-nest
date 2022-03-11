@@ -1,6 +1,27 @@
 ![Untitled-2022-01-13-1340](https://user-images.githubusercontent.com/97470/157576266-3a52f97a-8878-4561-9548-290e1e31737d.svg)
 
 
+
+```mermaid
+sequenceDiagram
+    participant Github
+    participant API
+    participant EventStore
+    participant Read Model Aggregator
+    participant Read Model Cache
+    participant Model Updates Topic
+    participant UI
+    
+    Github->>API:ingest webhooks
+    API->>EventStore:publish stream event
+    Read Model Aggregator-->>EventStore:subscribe to streams
+    Read Model Aggregator->>Read Model Cache:update read models
+    UI->>Read Model Cache:graphql queries (via API)
+    Read Model Aggregator->>Model Updates Topic:publish model updates
+    UI-->>Model Updates Topic:graphql subscriptions (via API)
+    UI->>API:graphql mutations
+```
+
 # Testapp
 
 This project was generated using [Nx](https://nx.dev).
