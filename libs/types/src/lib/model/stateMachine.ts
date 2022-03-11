@@ -12,7 +12,7 @@ import {
   PullRequestReviewRequested,
   PullRequestReviewSubmitted,
 } from '@testapp/events';
-import { CodeReviewOutcome, PullRequest } from '@testapp/types';
+import { CodeReviewOutcome, PullRequestView } from '@testapp/types';
 import { DateTime } from 'luxon';
 
 export type CodeReviewState = 'requested' | CodeReviewOutcome;
@@ -23,11 +23,18 @@ export interface RequestedReviewerState {
   requestCount: number;
 }
 
-export type StateMachineContext = PullRequest & {
+export interface ReviewInstanceState {
+  outcomeState: CodeReviewState;
+}
+
+// using the state machine context to maintain the
+// fields needed for the view
+export type StateMachineContext = Omit<
+  PullRequestView,
+  'number' | 'pendingReviewers'
+> & {
   reviewStates: {
-    [userName: string]: {
-      outcomeState: CodeReviewState;
-    };
+    [userName: string]: ReviewInstanceState;
   };
 };
 
@@ -105,6 +112,7 @@ const onPullRequestReviewSubmitted: TransitionsConfig<
       target: 'ReviewedPendingAuthorChanges',
       cond: 'anyOutstandingRejections',
       actions: assign({
+        wasApproved: (_, __) => false,
         reviewStates: updateCodeReviewStatesOnSubmitted,
         reviews: updateCodeReviewsOnSubmitted,
       }),

@@ -2,6 +2,10 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type PendingReviewer {
+  userName: String!
+}
+
 type CodeReview {
   userName: String!
   outcome: String!
@@ -12,10 +16,13 @@ type PullRequestType {
   title: String!
   authorUserName: String!
   url: String!
+  number: Int!
   isResolved: Boolean!
   wasApproved: Boolean!
   resolution: String
+  pendingReviewers: [PendingReviewer!]!
   reviews: [CodeReview!]!
+  isMergeable: Boolean!
 }
 
 type Query {

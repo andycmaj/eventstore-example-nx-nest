@@ -1,7 +1,12 @@
 import { StreamingRead, ResolvedEvent } from '@eventstore/db-client';
 import { PullRequestEvent } from '@testapp/events';
 import { interpret } from 'xstate';
-import { mergeRequestStateMachine, StateMachineContext } from './stateMachine';
+import {
+  mergeRequestStateMachine,
+  ReviewInstanceState,
+  StateMachineContext,
+} from './stateMachine';
+import { PullRequestView } from '../types';
 
 export class PullRequestModel {
   private _state: StateMachineContext;
@@ -37,5 +42,31 @@ export class PullRequestModel {
     }
 
     return this._state.url;
+  }
+
+  /**
+   * example of using the write-model (state machine)
+   * to build a read-model with presentation-specific fields
+   */
+  getView(): PullRequestView {
+    const allReviewers = Object.keys(this.state.reviewStates).map((key) => ({
+      userName: key,
+      state: this.state.reviewStates[key].outcomeState,
+    }));
+
+    const pendingReviewers = allReviewers
+      .filter((reviewer) => reviewer.state === 'requested')
+      .map((reviewer) => ({
+        userName: reviewer.userName,
+      }));
+
+    const urlSegments = this.url.split('/');
+    const prNumber = urlSegments[urlSegments.length - 1];
+
+    return {
+      ...this.state,
+      number: parseInt(prNumber, 10),
+      pendingReviewers,
+    };
   }
 }

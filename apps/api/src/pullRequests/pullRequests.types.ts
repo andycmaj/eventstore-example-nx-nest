@@ -1,5 +1,15 @@
-import { Field, ObjectType } from "@nestjs/graphql";
-import { CodeReviewOutcome, PullRequest, PullRequestResolution } from "@testapp/types";
+import { Field, Int, ObjectType } from '@nestjs/graphql';
+import {
+  CodeReviewOutcome,
+  PullRequestResolution,
+  PullRequestView,
+} from '@testapp/types';
+
+@ObjectType()
+export class PendingReviewer {
+  @Field()
+  userName: string;
+}
 
 @ObjectType()
 export class CodeReview {
@@ -11,7 +21,7 @@ export class CodeReview {
 }
 
 @ObjectType({ description: 'pull request' })
-export class PullRequestType implements PullRequest {
+export class PullRequestType implements PullRequestView {
   @Field()
   title: string;
 
@@ -20,6 +30,9 @@ export class PullRequestType implements PullRequest {
 
   @Field()
   url: string;
+
+  @Field(() => Int)
+  number: number;
 
   @Field()
   isResolved: boolean;
@@ -30,6 +43,12 @@ export class PullRequestType implements PullRequest {
   @Field(() => String, { nullable: true })
   resolution?: PullRequestResolution;
 
+  @Field(() => [PendingReviewer])
+  pendingReviewers: PendingReviewer[];
+
   @Field(() => [CodeReview])
   reviews: CodeReview[];
+
+  @Field()
+  isMergeable: boolean;
 }

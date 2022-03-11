@@ -5,13 +5,20 @@ export type CodeReviewOutcome =
   | 'discussion_started'
   | 'changes_requested';
 
-export interface PullRequest {
+/**
+ * read-side model for UI presentation
+ */
+export interface PullRequestView {
   authorUserName: string;
   title: string;
   url: string;
+  number: number;
   isResolved: boolean;
   wasApproved: boolean;
   resolution?: PullRequestResolution;
+  pendingReviewers: {
+    userName: string;
+  }[];
   reviews: {
     userName: string;
     outcome: CodeReviewOutcome;
