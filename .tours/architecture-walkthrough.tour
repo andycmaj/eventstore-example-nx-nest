@@ -1,0 +1,36 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Architecture Walkthrough",
+  "steps": [
+    {
+      "title": "Appending Events to a Stream",
+      "description": "here's where new events get published to a stream.\n`streamName` is essential. It's the entity/aggregate id.\n\nARCH NOTE: not using the WriteModel here, just appending to stream,\nsince we are ingestign events from an external source.\nbut likely, we want to load the WriteModel and use it to validate and APPEND\nthe new event here. this is where CQRS would likely come in, but doesn't have to\n",
+      "line": 54
+    },
+    {
+      "title": "Events are built here",
+      "description": "each event has a Type and a unique ID, and some data"
+    },
+    {
+      "title": "Subscribing to all events for PullRequest entities",
+      "description": "we're using EventStoreDB's `$ce-{stream-prefix}` stream-of-streams to subscribe to ALL pull request stream events (any event for any `pull_request-${id}` entity stream)"
+    },
+    {
+      "title": "Load the Aggregate on every event",
+      "description": "On every PR event, we're loading the Aggregate/Write Model for THAT PR Entity by `readStream`ing that entitie's unique streamId (PR url in this case).\n\nThe events we get will be replayed to project to the Aggregate state that the Write Model is based on."
+    },
+    {
+      "title": "Deriving a Read Model from the Write Model",
+      "description": "here, we're deriving a Read Model or View model from the Write Model Aggregate using `model.getView()`\n\nThis read model calculates some additional fields that aren't present in the Aggregate state."
+    },
+    {
+      "title": "Publishing Read Model Updates",
+      "description": "Here, we're publishing the update Read Model to an Updates stream, using any pub/sub technology (not EventStoreDB)."
+    },
+    {
+      "title": "Subscribing to Read Model change stream",
+      "description": "Here, we wire the Read Model change stream to a graphql subscription resolver for presentation-layer access"
+    }
+  ],
+  "ref": "main"
+}

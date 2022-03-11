@@ -17,7 +17,6 @@ const subscription = client.subscribeToStream<PullRequestEvent>(
 const run = async () => {
   for await (const resolvedEvent of subscription) {
     if (!resolvedEvent.event?.revision) {
-      console.log('XXXXXX===== empty event', resolvedEvent.event);
       continue;
     }
 
@@ -38,7 +37,7 @@ const run = async () => {
     const model = new PullRequestModel();
     await model.project(streamEvents);
 
-    // Update the projected model
+    // Update the view derived from the model
     await redis.set(model.url, JSON.stringify(model.getView()));
 
     // SUMMARY TOPIC

@@ -50,6 +50,7 @@ export class GithubController {
 
     try {
       const { streamName, events } = result;
+
       await this.eventStore.client.appendToStream(streamName, events, {
         // if we expect this to be the first event in any PR stream
         // expectedRevision: NO_STREAM,
