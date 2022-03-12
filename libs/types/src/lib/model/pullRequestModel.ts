@@ -1,18 +1,14 @@
 import { StreamingRead, ResolvedEvent } from '@eventstore/db-client';
 import { PullRequestEvent } from '@testapp/events';
 import { interpret } from 'xstate';
-import {
-  mergeRequestStateMachine,
-  ReviewInstanceState,
-  StateMachineContext,
-} from './stateMachine';
+import { mergeRequestStateMachine, StateMachineContext } from './stateMachine';
 import { PullRequestView } from '../types';
 
 export class PullRequestModel {
-  private _state: StateMachineContext;
+  private _stateMachineExtendedState: StateMachineContext;
 
   async project(eventStream: StreamingRead<ResolvedEvent<PullRequestEvent>>) {
-    if (!this._state) {
+    if (!this._stateMachineExtendedState) {
       // run machine against stream
       const machine = interpret(mergeRequestStateMachine).start();
       for await (const prEvent of eventStream) {
@@ -24,24 +20,24 @@ export class PullRequestModel {
       }
       machine.stop();
 
-      this._state = machine.state.context;
+      this._stateMachineExtendedState = machine.state.context;
     }
   }
 
   get state(): StateMachineContext {
-    if (!this._state) {
+    if (!this._stateMachineExtendedState) {
       throw new Error('model must be initialized');
     }
 
-    return this._state;
+    return this._stateMachineExtendedState;
   }
 
   get url(): string {
-    if (!this._state) {
+    if (!this._stateMachineExtendedState) {
       throw new Error('model must be initialized');
     }
 
-    return this._state.url;
+    return this._stateMachineExtendedState.url;
   }
 
   /**

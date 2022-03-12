@@ -29,9 +29,8 @@
     "serve": {
       "executor": "@nrwl/node:execute",
       "options": {
-        "buildTarget": "api:build"
-        // default port
-        // "port": 9229
+        "buildTarget": "api:build",
+        "port": 9230
       }
     },
     "lint": {

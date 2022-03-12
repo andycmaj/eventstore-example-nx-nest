@@ -23,7 +23,7 @@
       "executor": "@nrwl/node:execute",
       "options": {
         "buildTarget": "aggregator:build",
-        "port": 9230
+        "port": 9231
       }
     },
     "lint": {

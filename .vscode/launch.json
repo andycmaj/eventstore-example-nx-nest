@@ -4,15 +4,20 @@
     {
       "name": "Debug API",
       "type": "node",
-      "request": "attach"
-      // default port
-      // "port": 9229
+      "request": "attach",
+      "port": 9230
     },
     {
       "name": "Debug Aggregator",
       "type": "node",
       "request": "attach",
-      "port": 9230
+      "port": 9231
+    },
+    {
+      "name": "Debug UI",
+      "type": "node",
+      "request": "attach",
+      "processId": "${command:PickProcess}"
     }
   ]
 }

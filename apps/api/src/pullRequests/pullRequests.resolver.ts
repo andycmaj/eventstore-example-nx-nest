@@ -13,7 +13,11 @@ export class PullRequestsResolver {
 
   @Query(() => [PullRequestType])
   async getAllPullRequests(): Promise<PullRequestType[]> {
-    const keys = await this.modelCache.keys('*');
+    const keys = (await this.modelCache.keys('*')).filter((k) => !!k);
+    if (!keys.length) {
+      return [];
+    }
+
     const values = await this.modelCache.mget(keys.filter((k) => k !== ''));
     return values.map((v) => JSON.parse(v)) as PullRequestType[];
   }

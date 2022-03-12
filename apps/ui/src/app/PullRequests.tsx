@@ -87,10 +87,18 @@ export const PullRequests = () => {
         const updatedPr: PullRequestView = subscriptionData.data
           .pullRequestUpdated as PullRequestView;
 
+        let isNewPr = true;
+        const updatedPrs = oldPrs.map((oldPr) => {
+          if (updatedPr.url === oldPr.url) {
+            isNewPr = false;
+            return updatedPr;
+          }
+
+          return oldPr;
+        });
+
         return {
-          prs: oldPrs.map((oldPr) =>
-            updatedPr.url === oldPr.url ? updatedPr : oldPr,
-          ),
+          prs: isNewPr ? [...updatedPrs, updatedPr] : updatedPrs,
         };
       },
     });
