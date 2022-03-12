@@ -3,33 +3,82 @@
   "title": "Architecture Walkthrough",
   "steps": [
     {
-      "title": "Appending Events to a Stream",
+      "file": "apps/api/src/ingest/github/githubService.ts",
+      "description": "each event has a Type and a unique ID, and some data",
+      "line": 43,
+      "title": "Events are built here"
+    },
+    {
+      "file": "apps/api/src/ingest/github/github.controller.ts",
       "description": "here's where new events get published to a stream.\n`streamName` is essential. It's the entity/aggregate id.\n\nARCH NOTE: not using the WriteModel here, just appending to stream,\nsince we are ingestign events from an external source.\nbut likely, we want to load the WriteModel and use it to validate and APPEND\nthe new event here. this is where CQRS would likely come in, but doesn't have to\n",
-      "line": 54
+      "line": 56,
+      "title": "Events are published to a stream"
     },
     {
-      "title": "Events are built here",
-      "description": "each event has a Type and a unique ID, and some data"
+      "file": "apps/aggregator/src/main.ts",
+      "description": "we're using EventStoreDB's $ce-{stream-category} built-in projection stream to subscribe to ALL pull request stream events (any event for any pull_request-${id} entity stream)\n\nsee https://developers.eventstore.com/server/v21.10/projections.html#by-category\n",
+      "line": 11,
+      "title": "Subscribing to ALL PULLREQUEST EVENTS"
     },
     {
-      "title": "Subscribing to all events for PullRequest entities",
-      "description": "we're using EventStoreDB's `$ce-{stream-prefix}` stream-of-streams to subscribe to ALL pull request stream events (any event for any `pull_request-${id}` entity stream)"
+      "file": "apps/aggregator/src/main.ts",
+      "description": "Here's our `Aggregate` model. It's responsible for re-building STATE when given a history of `Events`.\n\nOn every PR event, we're loading the Aggregate/Write Model for THAT PR Entity by readStreaming that entitie's unique streamId (PR url in this case).\n\nThe events we get will be replayed to project to the Aggregate state that the Write Model is based on.\n\n",
+      "line": 37,
+      "title": "The Aggregate handles Projections"
     },
     {
-      "title": "Load the Aggregate on every event",
-      "description": "On every PR event, we're loading the Aggregate/Write Model for THAT PR Entity by `readStream`ing that entitie's unique streamId (PR url in this case).\n\nThe events we get will be replayed to project to the Aggregate state that the Write Model is based on."
+      "file": "libs/types/src/lib/model/pullRequestModel.ts",
+      "description": "The events we get will be re-played to project to the `Aggregate` state that the Write Model is based on.\n",
+      "line": 14,
+      "title": "Re-playing Events in a Stream"
     },
     {
-      "title": "Deriving a Read Model from the Write Model",
-      "description": "here, we're deriving a Read Model or View model from the Write Model Aggregate using `model.getView()`\n\nThis read model calculates some additional fields that aren't present in the Aggregate state."
+      "file": "libs/types/src/lib/model/pullRequestModel.ts",
+      "description": "\nInternally, the `Aggregate` uses an xState state machine to build-up state while re-playing, and to trigger any side effects.\n",
+      "line": 16,
+      "title": "Send Events to a State Machine"
     },
     {
-      "title": "Publishing Read Model Updates",
-      "description": "Here, we're publishing the update Read Model to an Updates stream, using any pub/sub technology (not EventStoreDB)."
+      "file": "libs/types/src/lib/model/pullRequestModel.ts",
+      "description": "the state machine's \"extended state\" (`context`, in xState API) is the projected STATE of the `Entity`. \n\n",
+      "line": 23,
+      "title": "Extended State from State Machine"
     },
     {
-      "title": "Subscribing to Read Model change stream",
-      "description": "Here, we wire the Read Model change stream to a graphql subscription resolver for presentation-layer access"
+      "file": "libs/types/src/lib/model/pullRequestModel.ts",
+      "description": "When we're done re-playing events, we'll use this \"extended state\" as a backing-field for our Read Model Aggregate's public accessors.",
+      "line": 32,
+      "title": "Projection is ready to access!"
+    },
+    {
+      "file": "libs/types/src/lib/model/pullRequestModel.ts",
+      "description": "here, we're deriving a Read Model or View model from the Aggregate's \"extended state\" using `model.getView()`.\n\nThis read model calculates some additional fields that aren't present in the Aggregate state, or xState \"extended state\".\n\n",
+      "line": 62,
+      "title": "Deriving a Read Model"
+    },
+    {
+      "file": "apps/aggregator/src/main.ts",
+      "description": "Upserting this Aggregate/Read Model in a View-model cache to be read by UI.",
+      "line": 41,
+      "title": "Caching the Read Model"
+    },
+    {
+      "file": "apps/aggregator/src/main.ts",
+      "description": "Here, we're publishing the updated Read Model to an Updates stream/Summary topic, using any pub/sub technology (not EventStoreDB).",
+      "line": 44,
+      "title": "Publishing Read-model Updates"
+    },
+    {
+      "file": "apps/api/src/pullRequests/pullRequests.resolver.ts",
+      "description": "Initial load of Read/Viewmodels from Read Model Cache on UI page load.",
+      "line": 15,
+      "title": "Loading Read-models from Cache"
+    },
+    {
+      "file": "apps/api/src/pullRequests/pullRequests.resolver.ts",
+      "description": "Here, we wire the Read Model change stream to a graphql subscription resolver for presentation-layer access\n\n",
+      "line": 29,
+      "title": "Subscribing to Read-model Updates"
     }
   ],
   "ref": "main"
