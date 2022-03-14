@@ -4,7 +4,7 @@ https://andycmaj.notion.site/Event-Sourcing-Notes-d8b7c0eef12240b295e163930a759b
 
 # Architecture of this Demo
 
-![Untitled-2022-01-13-1340](https://user-images.githubusercontent.com/97470/157576266-3a52f97a-8878-4561-9548-290e1e31737d.svg)
+![Untitled-2022-01-13-1340-1](https://user-images.githubusercontent.com/97470/158201138-7966aeb1-5ede-4d97-88f4-8e1c96d0e982.svg)
 
 ## Data flow
 
